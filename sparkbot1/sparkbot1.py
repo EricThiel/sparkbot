@@ -145,6 +145,7 @@ def create_webhook(roomId, target, webhook_name = "New Webhook"):
         "resource": "messages",
         "event": "created"
     }
+    pprint(spark_body)
 
     if (roomId != ""):
         {
