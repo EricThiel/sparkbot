@@ -140,10 +140,10 @@ def current_webhooks():
 def create_webhook(roomId, target, webhook_name = "New Webhook"):
     spark_u = spark_host + "v1/webhooks"
     spark_body = {
-        "name" : webhook_name,
-        "targetUrl" : target,
-        "resource" : "messages",
-        "event" : "created"
+        "name": webhook_name,
+        "targetUrl": target,
+        "resource": "messages",
+        "event": "created"
     }
 
     if (roomId != ""):
