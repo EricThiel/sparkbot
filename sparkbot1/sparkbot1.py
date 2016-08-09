@@ -153,7 +153,7 @@ def create_webhook(roomId, target, webhook_name = "New Webhook"):
 
     page = requests.post(spark_u, headers = spark_headers, json=spark_body)
     webhook = page.json()
-     pprint(webhook)
+    pprint(webhook)
     return webhook
 
 def update_webhook(webhook_id, target, name):
@@ -173,7 +173,7 @@ def delete_webhook(webhook_id):
 def setup_webhook(room_id, target, name):
     webhooks = current_webhooks()
     webhook_id = ""
-     pprint(webhooks)
+    pprint(webhooks)
 
     # Legacy test for room based demo
     if (room_id != ""):
