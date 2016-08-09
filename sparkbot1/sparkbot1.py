@@ -296,7 +296,7 @@ if __name__ == '__main__':
     #  3. Raw User Input
     bot_url = args.boturl
     if (bot_url == None):
-        bot_url = os.getenv("myhero_spark_bot_url")
+        bot_url = os.getenv("spark_bot_url")
         if (bot_url == None):
             bot_url = raw_input("What is the Application Address for this Bot? ")
     # print "Bot URL: " + bot_url
@@ -334,7 +334,7 @@ if __name__ == '__main__':
 
     # Set Authorization Details for external requests
     spark_headers["Authorization"] = "Bearer " + spark_token
-    app_headers["key"] = app_key
+  #  app_headers["key"] = app_key
 
     # Create Web Hook to recieve ALL messages
     global_webhook_id = setup_webhook("", bot_url, "Global Webhook")
