@@ -63,7 +63,7 @@ def process_incoming_message(post_data):
 
     message_id = post_data["data"]["id"]
     message = get_message(message_id)
-    #pprint(message)
+    pprint(message)
 
     # First make sure not processing a message from the bot
     if message["personEmail"] == bot_email:
@@ -84,7 +84,7 @@ def process_incoming_message(post_data):
     elif command in ["/invite"]:
         reply = invite_user(post_data)
     elif command in ["/add"]:
-        reply = add_user(post_data)
+        reply = add_to_teams(post_data)
 
     send_message_to_room(room_id, reply)
 
