@@ -56,14 +56,14 @@ def process_webhook():
 
 # Function to take action on incoming message
 def process_incoming_message(post_data):
-    # pprint(post_data)
+    pprint(post_data)
 
     webhook_id = post_data["id"]
     room_id = post_data["data"]["roomId"]
 
     message_id = post_data["data"]["id"]
     message = get_message(message_id)
-    # pprint(message)
+    pprint(message)
 
     # First make sure not processing a message from the bot
 #    if message["personEmail"] == bot_email:
