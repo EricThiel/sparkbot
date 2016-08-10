@@ -1,10 +1,9 @@
 #! /usr/bin/python
 '''
-    Spark Bot for Simple Superhero Voting Application
+    Spark Bot for room and team management
 
     This Bot will use a provided Spark Account (identified by the Developer Token)
-    and create a webhook to receive all messages sent to the account.   Users can
-    check current standings, list the available options, and place a vote.
+    and create a webhook to receive all messages sent to the account.
 
     This is the an example Service for a basic microservice demo application.
     The application was designed to provide a simple demo for Cisco Mantl
@@ -13,17 +12,16 @@
     suggested to set them as OS Environment Variables.  Here is an example on how to
     set them:
 
-    # Address and key for app server
-    export myhero_app_server=http://myhero-app.mantl.domain.com
-    export myhero_app_key=DemoAppKey
-
     # Details on the Cisco Spark Account to Use
-    export myhero_spark_bot_email=myhero.demo@domain.com
+    export spark_bot_email=myhero.demo@domain.com
     export spark_token=adfiafdadfadfaij12321kaf
 
     # Address and key for the Spark Bot itself
-    export myhero_spark_bot_url=http://myhero-spark.mantl.domain.com
-    export myhero_spark_bot_secret=DemoBotKey
+    export spark_bot_url=http://myhero-spark.mantl.domain.com
+    export spark_bot_secret=DemoBotKey
+
+    # Rooms to actively listen in:
+    export active_rooms=Abcd1234Efgh5678ijkl1234mnop1234qrst5678uvwx1234abcd1234efgh5678ijkl1234,Abcd1234Efgh5678ijkl1234mnop1234qrst5678uvwx1234abcd1234efgh5678ijkl1235,Abcd1234Efgh5678ijkl1234mnop1234qrst5678uvwx1234abcd1234efgh5678ijkl1236
 '''
 
 
@@ -31,21 +29,21 @@ __author__ = 'securenetwrk'
 
 
 from flask import Flask, request, Response
-import requests, json, re
+import requests, json, re, logging
 
 app = Flask(__name__)
 
 spark_host = "https://api.ciscospark.com/"
 spark_headers = {}
 spark_headers["Content-type"] = "application/json"
-app_headers = {}
-app_headers["Content-type"] = "application/json"
 
 commands = {
     "/invite": "Invite you to a team. Format: `/invite OPTION` ",
-    "/add": "Add a user to a team. Format: `/add OPTION` ",
+#    "/add": "Add a user to a team. Format: `/add OPTION` ",
     "/help": "Get help."
 }
+
+
 
 @app.route('/', methods=["POST"])
 def process_webhook():
@@ -56,17 +54,27 @@ def process_webhook():
 
 # Function to take action on incoming message
 def process_incoming_message(post_data):
-    #pprint(post_data)
+    pprint(post_data)
 
     webhook_id = post_data["id"]
     room_id = post_data["data"]["roomId"]
 
     message_id = post_data["data"]["id"]
+    pprint(message_id)
     message = get_message(message_id)
     pprint(message)
 
     # First make sure not processing a message from the bot
     if message["personEmail"] == bot_email:
+        return ""
+
+    # Next make sure it is a Cisco employee
+    if not message["personEmail"].endswith("@cisco.com"):
+        return ""
+
+    ## Next make sure we are processing a message from an active room
+    if (message["roomId"] not in activerooms) and (message["roomType"] == "group"):
+        #pprint(message["roomId"])
         return ""
 
     command = ""
@@ -229,36 +237,41 @@ def get_current_teams():
     # Get list of teams
     spark_u = spark_host + "v1/teams"
     page = requests.get(spark_u, headers = spark_headers)
-#    teams = page.json()
-#    return teams["items"]
-#    teams = page.json()["name"]
-    return page
+    teams = page.json()
+    return teams["items"]
 
 def get_membership_for_team(team_id):
     # Get Membership for Team
     spark_u = spark_host + "v1/team/memberships?teamId=%s" % (team_id)
     page = requests.get(spark_u, headers = spark_headers)
-    memberships = page.json()["items"]
+    memberships = page.json()
     return memberships
 
-def invite_to_team(message):
+def find_team(message):
+    messagetext = message["text"]
+    messagetext = messagetext.partition(' ')[2]
     teampage = get_current_teams()
-    pprint(teampage)
-    jsonteam = json.load(teampage)
+    #pprint(messagetext)
+#    jsonteam = json.load(teampage)
 #    teamlist = page.json()["name"]
-    for team in jsonteam['name']:
-        if message["text"].lower().find(team.lower()) > -1:
-            sys.stderr.write("Found a matching team: " + team + "\n")
+    for team in teampage:
+        #pprint(team)
+        if team["name"].lower() == messagetext.lower():
+            sys.stderr.write("Found a matching team: " + team["name"] + " - " + team["id"] + " for " + message["personEmail"] + "\n")
+            return team
+    return message
 
-
-#    team_id = post_data["data"]["id"]
-#    spark_u = spark_host + "v1/team/memberships"
-#    message_body = {
-#        "team_id" : team_id,
-#        "user_email" : user_email
-#    }
-#    page = requests.post(spark_u, headers = spark_headers, json=message_body)
-#    message = page.json()
+def invite_to_team(message):
+    team = find_team(message)
+    #pprint(team)
+    spark_u = spark_host + "v1/team/memberships"
+    message_body = {
+        "teamId" : team["id"],
+        "personEmail" : message["personEmail"]
+    }
+    page = requests.post(spark_u, headers = spark_headers, json=message_body)
+    message = page.json()
+    #pprint(message)
     return message
 
 
@@ -301,6 +314,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         "-s", "--secret", help="Key Expected in API Calls", required=False
+    )
+    parser.add_argument(
+        "-a", "--activerooms", help="comma-delimited list of active rooms", required=False
     )
 
     args = parser.parse_args()
@@ -347,10 +363,14 @@ if __name__ == '__main__':
             secret_key = get_secret_key
     sys.stderr.write("Secret Key: " + secret_key + "\n")
 
+    active_rooms = args.activerooms
+    if (active_rooms == None):
+        active_rooms = os.getenv("active_rooms")
+        activerooms = active_rooms.split(",")
+   # sys.stderr.write("Active rooms: " + active_rooms + "\n")
 
     # Set Authorization Details for external requests
     spark_headers["Authorization"] = "Bearer " + spark_token
-  #  app_headers["key"] = app_key
 
     # Create Web Hook to recieve ALL messages
     global_webhook_id = setup_webhook("", bot_url, "Global Webhook")
