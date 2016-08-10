@@ -82,7 +82,7 @@ def process_incoming_message(post_data):
     if command in ["","/help"]:
         reply = send_help(post_data)
     elif command in ["/invite"]:
-        reply = invite_user(post_data)
+        reply = invite_to_team(post_data)
     elif command in ["/add"]:
         reply = add_to_team(post_data)
 
@@ -239,7 +239,7 @@ def get_membership_for_team(team_id):
     memberships = page.json()["items"]
     return memberships
 
-def add_to_team(message):
+def invite_to_team(message):
     teamlist = get_current_teams()
     for team in teamlist:
         if message["text"].lower().find(team.lower()) > -1:
