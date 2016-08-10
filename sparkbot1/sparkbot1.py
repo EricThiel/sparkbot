@@ -126,7 +126,7 @@ def send_message_to_room(room_id, message):
 
 def get_message(message_id):
     spark_u = spark_host + "v1/messages/" + message_id
-    pprint(message_id)
+    pprint(spark_u)
     page = requests.get(spark_u, headers = spark_headers)
     message = page.json()
     pprint(message)
