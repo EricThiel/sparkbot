@@ -232,7 +232,6 @@ def get_current_teams():
     teams = page.json()
 #    return teams["items"]
 #    teams = page.json()["name"]
-    pprint(teams)
     return teams
 
 def get_membership_for_team(team_id):
@@ -244,6 +243,7 @@ def get_membership_for_team(team_id):
 
 def invite_to_team(message):
     teampage = get_current_teams()
+    pprint(teampage)
 #    teamlist = page.json()["name"]
     for team in teampage['name']:
         if message["text"].lower().find(team.lower()) > -1:
