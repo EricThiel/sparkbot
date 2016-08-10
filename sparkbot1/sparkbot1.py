@@ -240,7 +240,8 @@ def get_membership_for_team(team_id):
     return memberships
 
 def invite_to_team(message):
-    teamlist = get_current_teams()
+    page = get_current_teams()
+    teamlist = page.json()["name"]
     for team in teamlist:
         if message["text"].lower().find(team.lower()) > -1:
             sys.stderr.write("Found a matching team: " + team + "\n")
