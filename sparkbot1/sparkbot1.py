@@ -229,10 +229,10 @@ def get_current_teams():
     # Get list of teams
     spark_u = spark_host + "v1/teams"
     page = requests.get(spark_u, headers = spark_headers)
-    teams = page.json()
+#    teams = page.json()
 #    return teams["items"]
 #    teams = page.json()["name"]
-    return teams
+    return page
 
 def get_membership_for_team(team_id):
     # Get Membership for Team
