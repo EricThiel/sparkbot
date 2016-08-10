@@ -56,18 +56,18 @@ def process_webhook():
 
 # Function to take action on incoming message
 def process_incoming_message(post_data):
-    pprint(post_data)
+    #pprint(post_data)
 
     webhook_id = post_data["id"]
     room_id = post_data["data"]["roomId"]
 
     message_id = post_data["data"]["id"]
     message = get_message(message_id)
-    pprint(message)
+    #pprint(message)
 
     # First make sure not processing a message from the bot
-#    if message["personEmail"] == bot_email:
-#        return ""
+    if message["personEmail"] == bot_email:
+        return ""
 
     command = ""
     for c in commands.items():
@@ -126,12 +126,11 @@ def send_message_to_room(room_id, message):
 
 def get_message(message_id):
     spark_u = spark_host + "v1/messages/" + message_id
-    pprint(spark_u)
+    #pprint(spark_u)
     page = requests.get(spark_u, headers = spark_headers)
     message = page.json()
-    pprint(message)
+    #pprint(message)
     return message
-
 
 #### Webhook Utilities
 def current_webhooks():
@@ -148,7 +147,7 @@ def create_webhook(roomId, target, webhook_name = "New Webhook"):
         "resource": "messages",
         "event": "created"
     }
-    pprint(spark_body)
+    #pprint(spark_body)
 
     if (roomId != ""):
         {
