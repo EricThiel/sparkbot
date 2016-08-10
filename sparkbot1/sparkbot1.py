@@ -231,8 +231,8 @@ def get_current_teams():
     page = requests.get(spark_u, headers = spark_headers)
 #    teams = page.json()
 #    return teams["items"]
-    teams = page.json()["name"]
-    return teams
+#    teams = page.json()["name"]
+    return page
 
 def get_membership_for_team(team_id):
     # Get Membership for Team
@@ -242,9 +242,9 @@ def get_membership_for_team(team_id):
     return memberships
 
 def invite_to_team(message):
-    teamlist = get_current_teams()
+    teampage = get_current_teams()
 #    teamlist = page.json()["name"]
-    for team in teamlist:
+    for team in teampage['name']:
         if message["text"].lower().find(team.lower()) > -1:
             sys.stderr.write("Found a matching team: " + team + "\n")
 
