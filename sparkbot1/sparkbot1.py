@@ -84,7 +84,7 @@ def process_incoming_message(post_data):
     elif command in ["/invite"]:
         reply = invite_user(post_data)
     elif command in ["/add"]:
-        reply = add_to_teams(post_data)
+        reply = add_to_team(post_data)
 
     send_message_to_room(room_id, reply)
 
@@ -239,14 +239,21 @@ def get_membership_for_team(team_id):
     memberships = page.json()["items"]
     return memberships
 
-def add_to_team(team_id,user_email):
-    spark_u = spark_host + "v1/team/memberships"
-    message_body = {
-        "team_id" : team_id,
-        "user_email" : user_email
-    }
-    page = requests.post(spark_u, headers = spark_headers, json=message_body)
-    message = page.json()
+def add_to_team(message):
+    teamlist = get_current_teams()
+    for team in teamlist:
+        if message["text"].lower().find(team.lower()) > -1:
+            sys.stderr.write("Found a matching team: " + team + "\n")
+
+
+#    team_id = post_data["data"]["id"]
+#    spark_u = spark_host + "v1/team/memberships"
+#    message_body = {
+#        "team_id" : team_id,
+#        "user_email" : user_email
+#    }
+#    page = requests.post(spark_u, headers = spark_headers, json=message_body)
+#    message = page.json()
     return message
 
 
