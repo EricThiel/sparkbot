@@ -132,6 +132,7 @@ def get_message(message_id):
     pprint(message)
     return message
 
+
 #### Webhook Utilities
 def current_webhooks():
     spark_u = spark_host + "v1/webhooks"
