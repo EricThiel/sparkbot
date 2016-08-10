@@ -82,9 +82,9 @@ def process_incoming_message(post_data):
     if command in ["","/help"]:
         reply = send_help(post_data)
     elif command in ["/invite"]:
-        reply = invite_to_team(post_data)
+        reply = invite_to_team(message)
     elif command in ["/add"]:
-        reply = add_to_team(post_data)
+        reply = add_to_team(message)
 
     send_message_to_room(room_id, reply)
 
