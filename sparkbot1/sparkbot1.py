@@ -232,6 +232,7 @@ def get_current_teams():
     teams = page.json()
 #    return teams["items"]
 #    teams = page.json()["name"]
+    pprint(teams)
     return teams
 
 def get_membership_for_team(team_id):
