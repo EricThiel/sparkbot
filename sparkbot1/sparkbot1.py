@@ -66,8 +66,8 @@ def process_incoming_message(post_data):
     # pprint(message)
 
     # First make sure not processing a message from the bot
-    if message["personEmail"] == bot_email:
-        return ""
+#    if message["personEmail"] == bot_email:
+#        return ""
 
     command = ""
     for c in commands.items():
