@@ -29,7 +29,7 @@ __author__ = 'securenetwrk'
 
 
 from flask import Flask, request, Response
-import requests, json, re, logging
+import requests, json, re, logging, time
 
 app = Flask(__name__)
 
@@ -38,8 +38,9 @@ spark_headers = {}
 spark_headers["Content-type"] = "application/json"
 
 commands = {
-    "/invite": "Invite you to a team. Format: `/invite OPTION` ",
-#    "/add": "Add a user to a team. Format: `/add OPTION` ",
+    "/invite": "Invite you to a team. Format: `/invite TeamName` ",
+    "/inviteroom": "Invite you to a room. Format: `/invite RoomName` ",
+    #    "/add": "Add a user to a team. Format: `/add OPTION` ",
     "/help": "Get help."
 }
 
@@ -60,9 +61,9 @@ def process_incoming_message(post_data):
     room_id = post_data["data"]["roomId"]
 
     message_id = post_data["data"]["id"]
-    pprint(message_id)
+#    pprint(message_id)
     message = get_message(message_id)
-    pprint(message)
+#    pprint(message)
 
     # First make sure not processing a message from the bot
     if message["personEmail"] == bot_email:
@@ -73,9 +74,11 @@ def process_incoming_message(post_data):
         return ""
 
     ## Next make sure we are processing a message from an active room
-    if (message["roomId"] not in activerooms) and (message["roomType"] == "group"):
+    if message["roomType"] == "group":
+        if message["roomId"] not in activerooms:
         #pprint(message["roomId"])
-        return ""
+            return ""
+        message["text"] = message["text"].partition(' ')[2]
 
     command = ""
     for c in commands.items():
@@ -87,15 +90,22 @@ def process_incoming_message(post_data):
 
     # Take action based on command
     # If no command found, send help
-    if command in ["","/help"]:
+
+    reply = "None"
+
+    if command in ["/h","/help"]:
         reply = send_help(post_data)
     elif command in ["/invite"]:
         reply = invite_to_team(message)
+    elif command in ["/inviteroom"]:
+        reply = invite_to_room(message)
     elif command in ["/add"]:
         reply = add_to_team(message)
 
-    send_message_to_room(room_id, reply)
+    if reply not in ["None"]:
+        send_message_to_room(room_id, reply)
 
+    time.sleep(2) #avoid too much spam
 
 def send_help(post_data):
     message = "Thanks for your interest in me.  \n"
@@ -232,6 +242,33 @@ def get_membership_for_room(room_id):
     memberships = page.json()["items"]
     return memberships
 
+def find_room(message):
+    # Find a room within a list of current room
+    messagetext = message["text"]
+    messagetext = messagetext.partition(' ')[2]
+    pprint(messagetext)
+    roompage = current_rooms()
+#    pprint(roompage)
+    for room in roompage:
+        if room["title"].lower() == messagetext.lower():
+            sys.stderr.write("Found a matching room: " + room["title"] + " - " + room["id"] + " for " + message["personEmail"] + "\n")
+            return room
+    return "None"
+
+def invite_to_room(message):
+    # Invite user to a team
+    room = find_room(message)
+    if room == "None":
+        return "None"
+    spark_u = spark_host + "v1/memberships"
+    message_body = {
+        "roomId" : room["id"],
+        "personEmail" : message["personEmail"]
+    }
+    page = requests.post(spark_u, headers = spark_headers, json=message_body)
+    message = page.json()
+    return message
+
 #### Team Utilities
 def get_current_teams():
     # Get list of teams
@@ -248,22 +285,21 @@ def get_membership_for_team(team_id):
     return memberships
 
 def find_team(message):
+    # Find a team within a list of current teams
     messagetext = message["text"]
     messagetext = messagetext.partition(' ')[2]
     teampage = get_current_teams()
-    #pprint(messagetext)
-#    jsonteam = json.load(teampage)
-#    teamlist = page.json()["name"]
     for team in teampage:
-        #pprint(team)
         if team["name"].lower() == messagetext.lower():
             sys.stderr.write("Found a matching team: " + team["name"] + " - " + team["id"] + " for " + message["personEmail"] + "\n")
             return team
-    return message
+    return "None"
 
 def invite_to_team(message):
+    # Invite user to a team
     team = find_team(message)
-    #pprint(team)
+    if team == "None":
+        return "None"
     spark_u = spark_host + "v1/team/memberships"
     message_body = {
         "teamId" : team["id"],
@@ -271,7 +307,6 @@ def invite_to_team(message):
     }
     page = requests.post(spark_u, headers = spark_headers, json=message_body)
     message = page.json()
-    #pprint(message)
     return message
 
 
@@ -373,8 +408,8 @@ if __name__ == '__main__':
     spark_headers["Authorization"] = "Bearer " + spark_token
 
     # Create Web Hook to recieve ALL messages
-    global_webhook_id = setup_webhook("", bot_url, "Global Webhook")
-    sys.stderr.write("Global Web Hook ID: " + global_webhook_id + "\n")
+#    global_webhook_id = setup_webhook("", bot_url, "Global Webhook")
+#    sys.stderr.write("Global Web Hook ID: " + global_webhook_id + "\n")
 
     app.run(debug=True, host='0.0.0.0', port=int("5000"))
 
