@@ -1,39 +1,11 @@
-# MyHero Spark Bot
+# Generic Spark Bot
 
-This is the a Spark Bot for a basic microservice demo application.
-This provides an interactive chat service for a voting system where users can vote for their favorite movie superhero.
+This is the a Spark Bot as a basic proof of concept
 
-Details on deploying the entire demo to a Mantl cluster can be found at
-* MyHero Demo - [hpreston/myhero_demo](https://github.com/hpreston/myhero_demo)
+The application was designed to provide a simple demo for Cisco Spark.  It is written as a simple Python Flask application and deployed as a docker container.
 
-The application was designed to provide a simple demo for Cisco Mantl.  It is written as a simple Python Flask application and deployed as a docker container.
+**NOTE: To leverage the Spark Bot Service, your Cluster MUST be configured for deployed applications to be accessible from the public Internet.  This is because it relies on the Spark Cloud to be able to send a WebHook to the spark application you run***
 
-**NOTE: To leverage the Spark Bot Service, your Mantl Cluster MUST be configured for deployed applications to be accessible from the public Internet.  This is because it relies on the Spark Cloud to be able to send a WebHook to the myhero_spark application you run in Mantl***
-
-Other services are:
-
-* Data - [hpreston/myhero_data](https://github.com/hpreston/myhero_data)
-* App - [hpreston/myhero_app](https://github.com/hpreston/myhero_app)
-* Web - [hpreston/myhero_web](https://github.com/hpreston/myhero_web)
-* Ernst - [hpreston/myhero_ernst](https://github.com/hpreston/myhero_ernst)
-  * Optional Service used along with an MQTT server when App is in "queue" mode
-* Spark Bot - [hpreston/myhero_spark](https://github.com/hpreston/myhero_spark)
-  * Optional Service that allows voting through IM/Chat with a Cisco Spark Bot
-* Tropo App - [hpreston/myhero_tropo](https://github.com/hpreston/myhero_tropo)
-  * Optional Service that allows voting through TXT/SMS messaging
-
-
-The docker containers are available at
-
-* Data - [hpreston/myhero_data](https://hub.docker.com/r/hpreston/myhero_data)
-* App - [hpreston/myhero_app](https://hub.docker.com/r/hpreston/myhero_app)
-* Web - [hpreston/myhero_web](https://hub.docker.com/r/hpreston/myhero_web)
-* Ernst - [hpreston/myhero_ernst](https://hub.docker.com/r/hpreston/myhero_ernst)
-  * Optional Service used along with an MQTT server when App is in "queue" mode
-* Spark Bot - [hpreston/myhero_spark](https://hub.docker.com/r/hpreston/myhero_spark)
-  * Optional Service that allows voting through IM/Chat with a Cisco Spark Bot
-* Tropo App - [hpreston/myhero_tropo](https://hub.docker.com/r/hpreston/myhero_tropo)
-  * Optional Service that allows voting through TXT/SMS messaging
 
 # Spark Developer Account Requirement
 In order to use this service, you will need a Cisco Spark Account to use for the bot.  The bot is built for ease of use, meaning any message to the account used to create the Bot will be acted on and replied to.  This means you'll need to create a new Spark account for the demo.  
@@ -65,8 +37,6 @@ Required
 
 In order to run, the service needs several pieces of information to be provided:
 
-* App Server Address
-* App Server Authentication Key to Use
 * Spark Bot Authentication Key to Require in API Calls
 * Spark Bot URL
 * Spark Account Details
@@ -78,32 +48,28 @@ These details can be provided in one of three ways.
 * As a command line argument
 
 	```
-	python myhero_spark/myhero_spark.py \
-	  --app "http://myhero-app.server.com" \
-	  --appkey "APP AUTH KEY" \
+	python sparkbot1/sparkbot1.py \
 	  --secret "BOT AUTH KEY" \
-	  --boturl "http://myhero-spark.server.com" \
-	  --botemail "myhero.demo@server.com" \
+	  --boturl "http://spark.server.com" \
+	  --botemail "my.demo@server.com" \
 	  --token "HAAKJ1231KFSDFKJSDF1232132"
 	```
   
 * As environment variables
 
 	```
-	export myhero_app_server=http://myhero-app.server.com`
-	export myhero_app_key=APP AUTH KEY`
-	export myhero_spark_bot_email=myhero.demo@server.com`
+	export spark_bot_email=my.demo@server.com`
 	export spark_token=HAAKJ1231KFSDFKJSDF1232132`
-	export myhero_spark_bot_url=http://myhero-spark.server.com`
-	export myhero_spark_bot_secret="BOT AUTH KEY"`
-	python myhero_spark/myhero_spark.py`
+	export spark_bot_url=http://spark.server.com`
+	export spark_bot_secret="BOT AUTH KEY"`
+	python sparkbot1/sparkbot1.py`
 	```
 
 * As raw input when the application is run
 
 	```
-	python myhero_app/myhero_app.py`
-	What is the app server address? http://myhero-app.server.com`
+	python sparkbot1/sparkbot1.py`
+	What is the app server address? http://app.server.com`
 	App Server Key: APP AUTH KEY`
 	 .
 	 .
@@ -122,13 +88,11 @@ The Spark Bot is a very simple interface that is designed to make it intuitive t
 
 The bot is deisgned to look for commands to act on, and provide the basic help message for anything else.  The commands are:
 
-* /options
-  * return a list of the current available options to vote on
-* /results
-  * list the current status of voting results
-* /vote {{ option }} 
-  * Place a vote for the 'option'
-* /help 
+* /invite <teamname>
+  * invite a user to a team named <teamname>
+* /inviteroom <roomname>
+  * invite a user to a room named <roomname>
+* /help
   * Provide a help message
 
 ## REST APIs
@@ -137,21 +101,3 @@ The main service API is at the root of the applciation and is what is used for t
 
 # Local Development with Vagrant
 
-I've included the configuration files needed to do local development with Vagrant in the repo.  Vagrant will still use Docker for local development and is configured to spin up a CentOS7 host VM for running the container.
-
-Before running `vagrant up` you will need to finish the Vagrant file configuration by adding the Spark Account Email and Token to the environment variables used by the container.  To do this:
-
-* Make a copy of Vagrantfile.sample to use
-  * `cp Vagrantfile.sample Vagrantfile`
-* Edit `Vagrantfile` and add your details where indicated
-  * `vim Vagrantfile`
-  * Change the value for `myherospark_bot_email` and `spark_token` in the `docker.env` hash
-
-To start local development run:
-* `vagrant up`
-  - You may need to run this twice.  The first time to start the docker host, and the second to start the container.
-* Now you can interact with the API or interface at localhost:15001 (configured in Vagrantfile and Vagrantfile.host)
-  - example:  from your local machine `curl -H "key: DevBot" http://localhost:15003/demoroom/members`
-  - Environment Variables are configured in Vagrantfile for development
-
-Each of the services in the application (i.e. myhero_web, myhero_app, and myhero_data) include Vagrant support to allow working locally on all three simultaneously.
